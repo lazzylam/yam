@@ -5,7 +5,7 @@ from telethon.errors import UserNotParticipantError
 
 REQUIRED_CHANNEL = "ceritalamora"  # Ganti tanpa @
 # Photo ID dari Telegram (sama seperti di contoh kode kedua)
-BOT_PHOTO = "AgACAgUAAxkBAAMtaCQYT5xJ4YNmnrL2ycCblJTgUc8AAqnEMRvDTSlVReVbvpWK1FoACAEAAwIAA3kABx4E"
+BOT_PHOTO = "AgA6138865175-613971502AA639aaf98"
 
 def register(client):
     @client.on(events.NewMessage(pattern=r'/start'))
