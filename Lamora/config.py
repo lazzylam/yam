@@ -11,10 +11,12 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 MENTION_CHUNK_SIZE = int(os.getenv("MENTION_CHUNK_SIZE", 5))
 DELAY_BETWEEN_MESSAGES = int(os.getenv("DELAY_BETWEEN_MESSAGES", 2))
 
-OWNER_USERNAME = "wlamora"  # Replace with your Telegram username without @
-OWNER_ID = 6368336706  # Replace with your Telegram user ID
-SUPPORT_GROUP = "thislamora"
-DEVS = [6368336706]  # Ganti dengan ID kamu
+OWNER_USERNAME = os.getenv("OWNER_USERNAME")  # Contoh: wlamora
+OWNER_ID = int(os.getenv("OWNER_ID", 0))  # Contoh: 6368336706
+SUPPORT_GROUP = os.getenv("SUPPORT_GROUP")  # Contoh: thislamora (tanpa @)
+
+# DEVS bisa diisi dengan beberapa ID, dipisah spasi: "6368336706 1355077923"
+DEVS = [int(i) for i in os.getenv("DEVS", "").split()]
 
 UPSTREAM_REPO = os.getenv("UPSTREAM_REPO", "https://github.com/lazzylam/tag")
 UPSTREAM_BRANCH = os.getenv("UPSTREAM_BRANCH", "main")
