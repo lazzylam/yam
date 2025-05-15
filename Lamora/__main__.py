@@ -5,7 +5,10 @@ from client import client
 from Lamora.config import BOT_TOKEN
 from Lamora.kendali import *
 
-# Setup log
+# Turunkan log telethon supaya hanya WARNING ke atas yang muncul
+logging.getLogger("telethon").setLevel(logging.WARNING)
+
+# Setup log utama
 logging.basicConfig(level=logging.INFO)
 
 async def main():
