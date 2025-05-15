@@ -4,8 +4,6 @@ from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.errors import UserNotParticipantError
 
 REQUIRED_CHANNEL = "ceritalamora"  # Ganti tanpa @
-# Photo ID dari Telegram (sama seperti di contoh kode kedua)
-BOT_PHOTO = "AgA6138865175-613971502AA639aaf98"
 
 def register(client):
     @client.on(events.NewMessage(pattern=r'/start'))
@@ -28,11 +26,8 @@ def register(client):
 
         await event.delete()  # Hapus pesan /start jika sudah join
 
-        # Kirim pesan dengan foto
-        await client.send_file(
-            event.chat_id,
-            BOT_PHOTO,  # Gunakan photo ID dari Telegram
-            caption="hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
+        await event.respond(
+            "hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
             buttons=[
                 [Button.inline("ʜᴇʟᴘ", data="show_help")],
                 [
@@ -60,11 +55,8 @@ def register(client):
         except:
             pass
 
-        # Kirim pesan dengan foto
-        await client.send_file(
-            event.chat_id,
-            BOT_PHOTO,  # Gunakan photo ID dari Telegram
-            caption="hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
+        await event.respond(
+            "hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
             buttons=[
                 [Button.inline("ʜᴇʟᴘ", data="show_help")],
                 [
@@ -99,9 +91,6 @@ def register(client):
     async def back_button_handler(event):
         me = await client.get_me()
         await event.answer()
-        
-        # Tidak bisa mengirim foto dalam callback edit
-        # Jadi kita hanya edit teks saja
         await event.edit(
             "hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
             buttons=[
