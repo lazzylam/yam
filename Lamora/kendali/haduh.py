@@ -47,7 +47,10 @@ def register(client):
             full_text = re.sub(r'\s+\d+$', '', full_text)
         
         link_match = re.findall(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', full_text)
-        link_block = '\n'.join(link_match[:5]) if link_match else ''
+        # Format links dengan '>' sebagai penunjuk dan pastikan tiap link di baris baru
+        formatted_links = ""
+        if link_match:
+            formatted_links = "\n".join([f"> {link}" for link in link_match[:5]])
         message = re.sub(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', '', full_text).strip() or "Hai semua!"
 
         # Jika sudah ada tag yang berjalan di chat ini
@@ -87,7 +90,12 @@ def register(client):
                         await client.send_message(chat_id, f"Batas waktu {time_limit_minutes} menit tercapai. Tag dihentikan setelah menyebut {tagged_count} anggota.")
                         break
                         
-                    content = f"{message}\n\n{link_block}\n\n{' '.join(chunk)}"
+                    # Format links dengan '>' sebagai penunjuk dan pastikan tiap link di baris baru
+                    formatted_links = ""
+                    if link_match:
+                        formatted_links = "\n".join([f"> {link}" for link in link_match[:5]])
+                    
+                    content = f"{message}\n\n{formatted_links}\n\n{' '.join(chunk)}"
                     await client.send_message(chat_id, content, parse_mode='markdown')
                     tagged_count += len(chunk)
                     await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
