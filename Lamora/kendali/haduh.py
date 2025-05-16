@@ -14,6 +14,13 @@ EMOJIS = ['🔥', '✨', '❤️', '⚡', '⭐', '💥', '🎉', '😎', '🥳',
 
 def register(client):
 
+    # Fungsi untuk memeriksa apakah user adalah admin
+    async def is_admin(client, chat_id, user_id):
+        async for admin in client.iter_participants(chat_id, filter=ChannelParticipantsAdmins):
+            if admin.id == user_id:
+                return True
+        return False
+
     @client.on(events.NewMessage(pattern='/utag'))
     async def tag_all_handler(event):
         if event.is_private:
@@ -21,6 +28,13 @@ def register(client):
             return
 
         chat_id = event.chat_id
+        user_id = event.sender_id
+        
+        # Memeriksa apakah pengirim adalah admin
+        if not await is_admin(client, chat_id, user_id):
+            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            return
+            
         full_text = event.message.text.replace('/utag', '', 1).strip()
         link_match = re.findall(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', full_text)
         link_block = '\n'.join(link_match[:5]) if link_match else ''
@@ -65,6 +79,13 @@ def register(client):
             return
 
         chat_id = event.chat_id
+        user_id = event.sender_id
+        
+        # Memeriksa apakah pengirim adalah admin
+        if not await is_admin(client, chat_id, user_id):
+            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            return
+            
         if active_tags.get(chat_id):
             active_tags[chat_id] = False
             await event.respond("Tag dihentikan oleh admin.")
@@ -76,6 +97,15 @@ def register(client):
         if event.is_private:
             await event.respond("Perintah hanya bisa digunakan di grup.")
             return
+            
+        chat_id = event.chat_id
+        user_id = event.sender_id
+        
+        # Memeriksa apakah pengirim adalah admin
+        if not await is_admin(client, chat_id, user_id):
+            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            return
+            
         event.message.text = event.message.text.replace('/all', '/utag', 1)
         await tag_all_handler(event)
 
