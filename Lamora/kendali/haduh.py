@@ -11,13 +11,12 @@ from Lamora.kangen.hum import chunk_list
 active_tags = {}
 current_tasks = {}
 tag_timers = {}
-tag_counters = {}  # Untuk menyimpan jumlah user yang berhasil ditag
+tag_counters = {}
 
 EMOJIS = ['🔥', '✨', '❤️', '⚡', '⭐', '💥', '🎉', '😎', '🥳', '🌀', '🌟', '☄️', '🍀', '🚀']
 
 def register(client):
 
-    # Fungsi untuk memeriksa apakah user adalah admin
     async def is_admin(client, chat_id, user_id):
         async for admin in client.iter_participants(chat_id, filter=ChannelParticipantsAdmins):
             if admin.id == user_id:
@@ -27,55 +26,46 @@ def register(client):
     @client.on(events.NewMessage(pattern='/utag'))
     async def tag_all_handler(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
 
         chat_id = event.chat_id
         user_id = event.sender_id
 
-        # Memeriksa apakah pengirim adalah admin
         if not await is_admin(client, chat_id, user_id):
-            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            await event.respond("Maaf kak, cuma kakak admin yang bisa pakai perintah ini.")
             return
 
         full_text = event.message.text.replace('/utag', '', 1).strip()
-
-        # Simpan pesan asli tanpa modifikasi
         original_message = full_text.strip()
 
-        # Ekstrak time limit dari akhir pesan jika ada
         time_limit_minutes = None
         time_match = re.search(r'\s+(\d+)$', original_message)
         if time_match:
             time_limit_minutes = int(time_match.group(1))
             original_message = re.sub(r'\s+\d+$', '', original_message)
 
-        # Extract links untuk keperluan internal (tidak mengubah pesan asli)
         link_match = re.findall(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', original_message)
 
-        # Jika sudah ada tag yang berjalan di chat ini
         if chat_id in active_tags and active_tags[chat_id]:
-            await event.respond("Ada tag yang sedang berjalan. Gunakan /cancel untuk menghentikannya terlebih dahulu.")
+            await event.respond("Ada tag yang lagi jalan nih. Pakai /cancel dulu ya kak buat berhentiin.")
             return
 
         active_tags[chat_id] = True
-        status = await event.respond("Mengumpulkan anggota...")
+        status = await event.respond("Aku lagi kumpulin anggota dulu ya...")
 
         members = await get_all_members(client, chat_id)
         if not members:
-            await status.edit("Tidak bisa mengambil anggota.")
+            await status.edit("Nggak bisa ambil data anggota nih kak.")
             active_tags[chat_id] = False
             return
 
-        # Inisialisasi counter untuk chat_id ini
         tag_counters[chat_id] = 0
-
-        # Gunakan emoji acak sebagai teks mention yang menyebut user
         mentions = [f"[{random.choice(EMOJIS)}](tg://user?id={m['id']})" for m in members]
         chunks = chunk_list(mentions, MENTION_CHUNK_SIZE)
 
         time_info = f" selama {time_limit_minutes} menit" if time_limit_minutes else ""
-        await status.edit(f"Mulai tag {len(members)} member tiap {DELAY_BETWEEN_MESSAGES} detik{time_info}.\nGunakan /cancel untuk hentikan.")
+        await status.edit(f"Aku mulai tag {len(members)} anggota tiap {DELAY_BETWEEN_MESSAGES} detik{time_info}.\nPakai /cancel buat berhentiin ya kak.")
 
         async def do_mention_loop():
             try:
@@ -88,32 +78,28 @@ def register(client):
                     if not active_tags.get(chat_id):
                         break
 
-                    # Check if time limit is reached
                     if end_time and datetime.now() >= end_time:
-                        await client.send_message(chat_id, f"Batas waktu {time_limit_minutes} menit tercapai. Tag dihentikan setelah menyebut {tagged_count} anggota.")
+                        await client.send_message(chat_id, f"Batas waktunya udah habis kak ({time_limit_minutes} menit). Aku berhenti setelah nyebut {tagged_count} orang ya.")
                         break
 
-                    # Gunakan pesan asli tanpa modifikasi
                     content = f"{original_message}\n\n{' '.join(chunk)}"
                     await client.send_message(chat_id, content, parse_mode='markdown')
                     tagged_count += len(chunk)
-                    tag_counters[chat_id] = tagged_count  # Update jumlah user yang berhasil ditag
+                    tag_counters[chat_id] = tagged_count
                     await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
 
                 if active_tags.get(chat_id) and (end_time is None or datetime.now() < end_time):
-                    await client.send_message(chat_id, f"Semua {tagged_count} anggota telah disebut. Selesai.")
+                    await client.send_message(chat_id, f"Udah aku tag semua ya kak ({tagged_count} orang).")
             except Exception as e:
-                await client.send_message(chat_id, f"Gagal mengirim: {e}")
+                await client.send_message(chat_id, f"Aku gagal kirim karena: {e}")
             finally:
                 active_tags[chat_id] = False
                 current_tasks.pop(chat_id, None)
                 if chat_id in tag_timers:
                     del tag_timers[chat_id]
-                # Jangan hapus tag_counters agar bisa dilihat di status
 
         current_tasks[chat_id] = asyncio.create_task(do_mention_loop())
 
-        # Set timer if specified
         if time_limit_minutes:
             tag_timers[chat_id] = {
                 'start_time': datetime.now(),
@@ -123,38 +109,36 @@ def register(client):
     @client.on(events.NewMessage(pattern='/cancel'))
     async def cancel_tag(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
 
         chat_id = event.chat_id
         user_id = event.sender_id
 
-        # Memeriksa apakah pengirim adalah admin
         if not await is_admin(client, chat_id, user_id):
-            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            await event.respond("Maaf kak, cuma kakak admin yang bisa pakai perintah ini.")
             return
 
         if active_tags.get(chat_id):
             active_tags[chat_id] = False
             tagged_users = tag_counters.get(chat_id, 0)
-            await event.respond(f"Tag dihentikan oleh admin. Total {tagged_users} anggota telah ditag.")
+            await event.respond(f"Tag-nya udah aku stop ya kak. Total yang aku tag: {tagged_users} orang.")
             if chat_id in tag_timers:
                 del tag_timers[chat_id]
         else:
-            await event.respond("Tidak ada sesi tag yang aktif.")
+            await event.respond("Sekarang nggak ada sesi tag yang aktif kok.")
 
     @client.on(events.NewMessage(pattern=r'/all'))
     async def alias_all(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
 
         chat_id = event.chat_id
         user_id = event.sender_id
 
-        # Memeriksa apakah pengirim adalah admin
         if not await is_admin(client, chat_id, user_id):
-            await event.respond("Maaf, hanya admin yang dapat menggunakan perintah ini.")
+            await event.respond("Maaf kak, cuma kakak admin yang bisa pakai perintah ini.")
             return
 
         event.message.text = event.message.text.replace('/all', '/utag', 1)
@@ -163,7 +147,7 @@ def register(client):
     @client.on(events.NewMessage(pattern=r'^/(admins?|admin)$'))
     async def mention_admins(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
 
         chat_id = event.chat_id
@@ -174,11 +158,11 @@ def register(client):
             admins.append(user)
 
         if not admins:
-            await event.reply("Tidak dapat menemukan admin.")
+            await event.reply("Aku nggak nemu admin di grup ini, kak.")
             return
 
         mention_texts = [f"[{random.choice(EMOJIS)}](tg://user?id={u.id})" for u in admins]
-        await event.respond("Admin grup:\n" + " ".join(mention_texts), parse_mode='markdown')
+        await event.respond("Ini admin grup kita, kak:\n" + " ".join(mention_texts), parse_mode='markdown')
 
     @client.on(events.NewMessage(pattern=r'@admins'))
     async def mention_admins_alias(event):
@@ -187,15 +171,15 @@ def register(client):
     @client.on(events.NewMessage(pattern=r'/tagstatus'))
     async def tag_status(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
 
         chat_id = event.chat_id
 
         if chat_id in active_tags and active_tags[chat_id]:
             tagged_count = tag_counters.get(chat_id, 0)
-            status_msg = f"Tag sedang aktif. {tagged_count} anggota telah ditag.\n"
-            
+            status_msg = f"Tag masih jalan nih kak. Aku udah tag {tagged_count} orang.\n"
+
             if chat_id in tag_timers:
                 current_time = datetime.now()
                 start_time = tag_timers[chat_id]['start_time']
@@ -208,36 +192,33 @@ def register(client):
                 remaining_mins = int(remaining.total_seconds() / 60)
                 remaining_secs = int(remaining.total_seconds() % 60)
 
-                status_msg += f"⏱️ Berjalan: {elapsed_mins} menit {elapsed_secs} detik\n"
-                status_msg += f"⏳ Sisa waktu: {remaining_mins} menit {remaining_secs} detik"
+                status_msg += f"⏱️ Udah jalan: {elapsed_mins} menit {elapsed_secs} detik\n"
+                status_msg += f"⏳ Sisa waktunya: {remaining_mins} menit {remaining_secs} detik"
                 await event.respond(status_msg)
             else:
-                await event.respond(status_msg + "Tag berjalan tanpa batas waktu.")
+                await event.respond(status_msg + "Tanpa batas waktu ya kak.")
         else:
-            # Tampilkan hasil terakhir jika ada
             if chat_id in tag_counters:
-                await event.respond(f"Tidak ada sesi tag yang aktif. Sesi terakhir berhasil menyebut {tag_counters[chat_id]} anggota.")
+                await event.respond(f"Sekarang nggak ada sesi tag yang aktif. Terakhir aku sempet tag {tag_counters[chat_id]} orang.")
             else:
-                await event.respond("Tidak ada sesi tag yang aktif.")
-    
-    # Tambah perintah baru untuk melihat jumlah tag
+                await event.respond("Belum ada sesi tag yang aktif di grup ini.")
+
     @client.on(events.NewMessage(pattern=r'/tagcount'))
     async def tag_count(event):
         if event.is_private:
-            await event.respond("Perintah hanya bisa digunakan di grup.")
+            await event.respond("Kamu cuma bisa pakai perintah ini di grup ya.")
             return
-            
+
         chat_id = event.chat_id
-        
+
         if chat_id in tag_counters:
             if chat_id in active_tags and active_tags[chat_id]:
-                await event.respond(f"🔢 Jumlah anggota yang telah ditag: {tag_counters[chat_id]} (sesi masih berjalan)")
+                await event.respond(f"🔢 Sekarang aku udah tag {tag_counters[chat_id]} anggota (masih jalan ya).")
             else:
-                await event.respond(f"🔢 Jumlah anggota yang telah ditag pada sesi terakhir: {tag_counters[chat_id]}")
+                await event.respond(f"🔢 Jumlah tag terakhir: {tag_counters[chat_id]} anggota.")
         else:
-            await event.respond("Belum ada aktivitas tag di grup ini.")
+            await event.respond("Belum ada aktivitas tag di grup ini, kak.")
 
-# Fungsi mengambil semua anggota grup
 async def get_all_members(client, chat_id):
     members = []
     async for user in client.iter_participants(chat_id, search='', limit=None):
