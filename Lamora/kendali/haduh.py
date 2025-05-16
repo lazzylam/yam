@@ -39,16 +39,18 @@ def register(client):
 
         full_text = event.message.text.replace('/utag', '', 1).strip()
         
-        # Extract time limit in minutes from the end of the message if present
+        # Simpan pesan asli tanpa modifikasi
+        original_message = full_text.strip()
+        
+        # Ekstrak time limit dari akhir pesan jika ada
         time_limit_minutes = None
-        time_match = re.search(r'\s+(\d+)$', full_text)
+        time_match = re.search(r'\s+(\d+)$', original_message)
         if time_match:
             time_limit_minutes = int(time_match.group(1))
-            full_text = re.sub(r'\s+\d+$', '', full_text)
+            original_message = re.sub(r'\s+\d+$', '', original_message)
         
-        link_match = re.findall(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', full_text)
-        # Hapus link dari pesan utama untuk menghindari duplikasi
-        message = re.sub(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', '', full_text).strip() or "Hai semua!"
+        # Extract links untuk keperluan internal (tidak mengubah pesan asli)
+        link_match = re.findall(r'https:\/\/t\.me\/(?:\+)?[\w\d_]+', original_message)
 
         # Jika sudah ada tag yang berjalan di chat ini
         if chat_id in active_tags and active_tags[chat_id]:
@@ -87,17 +89,8 @@ def register(client):
                         await client.send_message(chat_id, f"Batas waktu {time_limit_minutes} menit tercapai. Tag dihentikan setelah menyebut {tagged_count} anggota.")
                         break
                         
-                    # Format pesan dengan link dan mentions
-                    content = f"{message}\n\n"
-                    
-                    # Tambahkan link jika ada
-                    if link_match:
-                        for link in link_match[:5]:
-                            content += f"> {link}\n"
-                        content += "\n"
-                        
-                    # Tambahkan mentions
-                    content += ' '.join(chunk)
+                    # Gunakan pesan asli tanpa modifikasi
+                    content = f"{original_message}\n\n{' '.join(chunk)}"
                     await client.send_message(chat_id, content, parse_mode='markdown')
                     tagged_count += len(chunk)
                     await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
