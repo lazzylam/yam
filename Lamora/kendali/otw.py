@@ -2,11 +2,15 @@ from telethon import events
 from telethon.tl.custom import Button
 from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.errors import UserNotParticipantError
+import asyncio
 
 REQUIRED_CHANNEL = "ceritalamora"  # Ganti tanpa @
 
 def register(client):
     async def send_welcome(event, me):
+        await client.send_chat_action(event.chat_id, 'typing')  # animasi mengetik
+        await asyncio.sleep(1.5)
+
         await event.respond(
             "hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
             buttons=[
@@ -18,6 +22,10 @@ def register(client):
                 [Button.url("ᴛᴀᴍʙᴀʜ ᴋᴇ ɢʀᴜᴘ", f"https://t.me/{me.username}?startgroup=true")]
             ]
         )
+
+        await client.send_chat_action(event.chat_id, 'upload_photo')  # animasi upload foto
+        await asyncio.sleep(1.5)
+
         await client.send_file(
             event.chat_id,
             'pic/dungeon.png',
@@ -73,6 +81,9 @@ def register(client):
     @client.on(events.CallbackQuery(data=b"show_help"))
     async def help_button_handler(event):
         await event.answer()
+        await client.send_chat_action(event.chat_id, 'typing')
+        await asyncio.sleep(1.2)
+
         help_text = (
             "bantuan cara pakai\n\n"
             "bot ini membantu kaka buat memanggil semua member di grup kaka dengan cepat.\n\n"
@@ -94,6 +105,9 @@ def register(client):
     async def back_button_handler(event):
         me = await client.get_me()
         await event.answer()
+        await client.send_chat_action(event.chat_id, 'typing')
+        await asyncio.sleep(1.2)
+
         await event.edit(
             "hai kak! aku bot mention grup yang dibuat oleh @wlamora.\ncek tombol di bawah untuk cara pakai ya.",
             buttons=[
