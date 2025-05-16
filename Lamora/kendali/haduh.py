@@ -13,7 +13,12 @@ current_tasks = {}
 tag_timers = {}
 tag_counters = {}
 
-EMOJIS = ['🔥', '✨', '❤️', '⚡', '⭐', '💥', '🎉', '😎', '🥳', '🌀', '🌟', '☄️', '🍀', '🚀']
+# Movie character names instead of emojis
+CHARACTER_NAMES = [
+    'Cinderella', 'Pangeran', 'Peri', 'Putri', 'Snow White', 'Aladdin', 
+    'Jasmine', 'Aurora', 'Belle', 'Beast', 'Mulan', 'Ariel', 'Elsa', 
+    'Anna', 'Simba', 'Nala', 'Moana', 'Merida', 'Rapunzel', 'Tiana'
+]
 
 def register(client):
 
@@ -61,7 +66,7 @@ def register(client):
             return
 
         tag_counters[chat_id] = 0
-        mentions = [f"[{random.choice(EMOJIS)}](tg://user?id={m['id']})" for m in members]
+        mentions = [f"[{random.choice(CHARACTER_NAMES)}](tg://user?id={m['id']})" for m in members]
         chunks = chunk_list(mentions, MENTION_CHUNK_SIZE)
 
         time_info = f" selama {time_limit_minutes} menit" if time_limit_minutes else ""
@@ -161,7 +166,8 @@ def register(client):
             await event.reply("eh, aku nggak nemu admin di grup ini, kak.")
             return
 
-        mention_texts = [f"[{random.choice(EMOJIS)}](tg://user?id={u.id})" for u in admins]
+        # Use character names for admin mentions instead of emojis
+        mention_texts = [f"[{random.choice(CHARACTER_NAMES)}](tg://user?id={u.id})" for u in admins]
         await event.respond("ee... ini admin grup kita, kak:\n" + " ".join(mention_texts), parse_mode='markdown')
 
     @client.on(events.NewMessage(pattern=r'@admins'))
